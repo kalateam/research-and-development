@@ -67,6 +67,8 @@ Non-built-in centers (including **`research-and-development`**) are **separate g
 
 Do **not** hand-commit hosting-repo submodule gitlinks or rely on local **`git submodule update`** alone when **`origin/main`** should record the new pin — unless the user explicitly directs a different workflow.
 
+**No manual worktree (binding clarification):** Pin promotion is **not** a separate manual worktree step for developers or agents. Run **`promote-center-submodule-pin`** **inline** (no AskQuestion gates inside the skill); center scripts create **`WORKTREE_ROOT`** automatically for the gitlink PR. **Forbidden:** direct commit/push of center gitlinks on **`HOSTING_ROOT`** checked-out **`main`**.
+
 Built-in **`sedea`** center is **not** submodule-pinned; this subsection does not apply to it.
 
 ### Git governance (worktree-only)
