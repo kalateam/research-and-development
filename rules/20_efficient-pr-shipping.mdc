@@ -267,6 +267,8 @@ When changes under a **non-built-in** center submodule (for example **`.sedea/ce
 
 Pin the center **`defaultBranch`** tip only. Git is **skill-owned** per [`.sedea/centers/sedea/rules/6_git-commit-push-gate.mdc`](.sedea/centers/sedea/rules/6_git-commit-push-gate.mdc) § *Submodule pin promotion (skill-owned)*. Canonical semantics: [`.sedea/centers/sedea/rules/3_center.mdc`](.sedea/centers/sedea/rules/3_center.mdc) § *Git repo semantics*.
 
+**No manual worktree (binding clarification):** Center pin promotion requires **no developer or agent worktree setup** and **no AskQuestion gates** — invoke **`promote-center-submodule-pin`** **inline** and the skill runs end-to-end. Center **`worktree-setup.sh`** still creates **`WORKTREE_ROOT`** automatically for the gitlink commit. **Forbidden:** staging or committing center gitlinks on **`HOSTING_ROOT`** checked-out **`main`** (direct commit/push on the primary clone).
+
 **Launch from worktree (after bootstrap success — when hosting repo documents dev launcher):**
 
 When dot-sedea documents a dev launcher script on the hosting repo:
