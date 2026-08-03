@@ -53,9 +53,7 @@ laneRules:
   - ".sedea/centers/research-and-development/missions/plan-and-deliver/skills/phase-planner/SKILL.md"
   - ".sedea/centers/research-and-development/missions/plan-and-deliver/skills/README.md"
 warmUpRules:
-  - ".sedea/centers/research-and-development/missions/plan-and-deliver/plan.mdc"
   - ".sedea/centers/research-and-development/missions/plan-and-deliver/skills/README.md"
-  - ".sedea/centers/research-and-development/docs/development-process.md"
   - ".sedea/centers/research-and-development/rules/30_planning-target-resolution.mdc"
 ---
 
@@ -67,11 +65,15 @@ The agent has enough context after step 3 to draft §§ 1–4 and the assessment
 
 The procedure below is a hard contract — do **not** skip steps, re-order them, or start drafting before the target plan is verified as a phase plan stub. Skipping a step is the difference between a clean phase plan and one that drifts from the documented process.
 
+## R&D center edit destination gate (binding)
+
+When this skill would write under **`.sedea/centers/research-and-development/`**, open **USER_CHECKPOINT** per **`missions/plan-and-deliver/skills/README.md`** § *R&D center edit destination gate* **before** any center write. Happy-path operations/plan writes do not open this gate. **Forbidden:** skip the gate; treat `sedea-centers/software-development` as Own on `sedea-ai/app`.
+
 ## Warm-up manifest (spawned)
 
-Per [`.sedea/centers/sedea/docs/lane-manifest-contract.md`](.sedea/centers/sedea/docs/lane-manifest-contract.md) and **`../README.md`** § *Default warm-up*. Host merge: `effectiveWarmUp = dedupe(bootstrapRules → laneRules → skillWarmUp)`. Frontmatter matches this table; spawners may omit run-request **`laneRules`** when identical (README spawn preflight row 11). **No `alwaysApply` frontmatter flip.**
+Per [`.sedea/centers/sedea/docs/lane-manifest-contract.md`](.sedea/centers/sedea/docs/lane-manifest-contract.md) and **`../README.md`** § *Default warm-up*. Host merge: `effectiveWarmUp = dedupe(bootstrapRules → laneRules → skillWarmUp)`. Frontmatter matches this table; spawners may omit run-request **`laneRules`** when identical (README spawn preflight row 11). **384 KiB cap:** frontmatter omits **`plan.mdc`**, **`development-process.md`** — explicit **`Read`** at named protocol steps. **No `alwaysApply` frontmatter flip.**
 
-### `bootstrapRules` — host-resolved (R&D layer)
+### `bootstrapRules` — host-resolved (R&D center layer)
 
 | Path | Purpose |
 |------|---------|
@@ -81,10 +83,10 @@ Per [`.sedea/centers/sedea/docs/lane-manifest-contract.md`](.sedea/centers/sedea
 
 | Path | Purpose |
 |------|---------|
-| `.sedea/centers/research-and-development/missions/plan-and-deliver/plan.mdc` | Squad Leader ledger, spawn/wait |
-| `.sedea/centers/research-and-development/missions/plan-and-deliver/skills/README.md` | Spawn contracts, terminal stop |
-| `.sedea/centers/research-and-development/docs/development-process.md` | NFD process templates |
+| `.sedea/centers/research-and-development/missions/plan-and-deliver/skills/README.md` | Slim spawn contracts, terminal stop |
 | `.sedea/centers/research-and-development/rules/30_planning-target-resolution.mdc` | Target resolution, depth-first gates |
+
+**Omitted from frontmatter (384 KiB spawn cap — runtime `Read`):** `plan.mdc`, `development-process.md`, `planning-mode-templates.md` — load at named protocol steps.
 
 ### `laneRules` — frontmatter `laneRules`
 
@@ -93,7 +95,7 @@ Per [`.sedea/centers/sedea/docs/lane-manifest-contract.md`](.sedea/centers/sedea
 | `.sedea/centers/sedea/rules/2_ask-question-instructions.mdc` | Structured choice, AskQuestion |
 | `.sedea/centers/research-and-development/rules/30_planning-target-resolution.mdc` | Planning target resolution (role minimum) |
 | `.sedea/centers/research-and-development/missions/plan-and-deliver/skills/phase-planner/SKILL.md` | This skill procedure |
-| `.sedea/centers/research-and-development/missions/plan-and-deliver/skills/README.md` | Spawn preflight, definitive `laneRules` |
+| `.sedea/centers/research-and-development/missions/plan-and-deliver/skills/README.md` | Spawn preflight M1–M9, definitive `laneRules` |
 
 ## Agent messaging (MCP)
 
@@ -108,22 +110,22 @@ Per [`.sedea/centers/sedea/docs/lane-manifest-contract.md`](.sedea/centers/sedea
 **Binding:**
 
 - Run **`../README.md`** § *MCP spawn preflight* (rows M1–M8) before every MCP spawn; **forbidden** host-resolved identity keys in MCP args (`correlationId`, `dispatchId`, `slotId`, … — see README § *Host-resolved identity*).
-- Run **`../README.md`** § *MCP notify preflight* (rows N1–N8) before every **`mission_control_notify_child_lanes`** call — cross-ref **`.sedea/centers/sedea/rules/4_mission.mdc`** § *MCP notify protocol*.
+- `Read` **`docs/spawn-ship-contracts.md`** § *MCP notify preflight* (rows N1–N8) — then run notify preflight before every **`mission_control_notify_child_lanes`** call — cross-ref **`.sedea/centers/sedea/rules/4_mission.mdc`** § *MCP notify protocol*.
 - **`laneRules`:** rely on this skill's frontmatter **`laneRules`**; MCP spawn schema omits **`laneRules`** on the wire (Phase 1 stub).
 - Inline skills (**`delivery-phases`**, **`pr-breakdown`**, inline **`pr-plan`**, inline **`new-plan`**) stay **inline-only** — no spawn wire change.
 - **Relevant Links (post-write):** After each Write/StrReplace that **creates or materially edits** this phase plan (or child ops plans written on this lane), call MCP **`mission_control_update_relevant_documents`** with absolute path(s) (`kind: plan`) — same turn preferred. **Skip** read-only loads, warm-up paths, and unchanged already-registered paths. Does **not** replace terminal plan path outputs. See **`../README.md`** § *Relevant Links — post-write registration*.
 
 ### Plan-change notify — emit-when (`mission_control_notify_child_lanes`)
 
-After a **material** phase plan edit on **this phase subtree** that affects **ongoing work** on named **non-terminal** child lanes, notify each affected child with a **separate** MCP call (one slug per call, v1). Normative protocol: **`.sedea/centers/sedea/rules/4_mission.mdc`** § *MCP notify protocol*.
+After a **material** phase plan edit on **this phase subtree** that affects named child lanes (active **or** terminal **`pr-plan`** row owners per rule **4** § *Planner-lane wake*), notify each affected child with a **separate** MCP call (one slug per call, v1). Normative protocol: **`.sedea/centers/sedea/rules/4_mission.mdc`** § *MCP notify protocol*.
 
 | Emit when | Target child slugs (examples) | Step **5e** alignment |
 |-----------|------------------------------|------------------------|
-| Material edit to phase plan §§1–4, **`### PR list`**, or decomposition scope on this file changes work for open children | Open **`coding-session`** spawns from this phase; nested **`phase-planner`** children on this subtree; inline **`new-plan`** / **`pr-plan`** row owners when **`activeLanes`** shows non-terminal work | Notify **does not replace** Step **5e** child terminal merge — still aggregate **`mission_control_send_agent_result`** deliveries; notify is handoff only |
+| Material edit to phase plan §§1–4, **`### PR list`**, or decomposition scope on this file changes work for affected children | Open **`coding-session`** spawns from this phase; **terminal `pr-plan`** slugs when a new PR row is added to a ship-complete plan path; nested **`phase-planner`** children on this subtree when material | Notify **does not replace** Step **5e** child terminal merge — still aggregate **`mission_control_send_agent_result`** deliveries; notify is handoff only |
 
-**Material edit** includes: PR list row scope/sequencing changes, §3 Changes bullets that alter a child PR plan path, and assessment/route updates that change what a named open child should implement.
+**Material edit** includes: PR list row scope/sequencing changes, **adding PR rows after phase ship-complete**, §3 Changes bullets that alter a child PR plan path, and assessment/route updates that change what a named child should implement.
 
-**Forbidden:** empty or speculative **`targetSlugs`**; notify terminal children; implicit fan-out; using notify instead of spawn for new PR rows or new lanes.
+**Forbidden:** empty or speculative **`targetSlugs`**; implicit fan-out; duplicate spawn when a planner slug already exists for the plan path; using notify instead of spawn for **first-time** PR row expansion with no prior slug.
 
 ### MCP notify preflight (`mission_control_notify_child_lanes`)
 
@@ -132,11 +134,11 @@ After a **material** phase plan edit on **this phase subtree** that affects **on
 | N1 | Caller authority — **`phase-planner`** may notify descendant slugs on this phase subtree only |
 | N2 | Required args present: **`summary`**, **`changeType`**, **`affectedPlanPaths`** (non-empty), **`targetSlugs`** (exactly one slug) |
 | N3 | **Forbidden args absent** — no host-resolved identity keys, no **`notifyAllDescendants`** |
-| N4 | **`targetSlugs`** contains exactly **one** dispatch-unique **non-terminal** child slug per call |
+| N4 | **`targetSlugs`** contains exactly **one** dispatch-unique child slug per call (terminal **`pr-plan`** slugs allowed per rule **4** § *Planner-lane wake*) |
 | N5 | **`affectedPlanPaths`** includes this phase plan and affected child PR plans when applicable |
 | N6 | Multiple children → **separate MCP calls** (one slug per call, v1) |
-| N7 | Omit terminal lanes from **`targetSlugs`** before calling |
-| N8 | New work → **`mission_control_spawn_agent`** — never notify as a spawn workaround |
+| N7 | Include **terminal planner** slugs when **`affectedPlanPaths`** intersects; omit terminal **leaf** lanes (`coding-session`) per rule **4** § *Leaf-lane omission* |
+| N8 | **First-time** PR row / lane with no prior slug → **`mission_control_spawn_agent`** — when slug exists → notify, never duplicate spawn |
 
 ### Plan-change notification receive (child lane)
 
@@ -147,7 +149,9 @@ When Mission Control delivers **`Mission Control: plan-change-notification deliv
 1. Parse host envelope fields: **`summary`**, **`changeType`**, **`affectedPlanPaths`**, optional **`excerptPointers`**, **`requestedChildActions`**, **`initiatingContext`**.
 2. **`Read`** each **`affectedPlanPaths`** entry in full before acting.
 3. Compare to **`inputs.targetPlanPath`**, phase subtree plans, **`activeLanes`**, and open **`### PR list`** rows — do **not** close the phase delivery row solely because notify arrived.
-4. Keep **`outputs.continuationStatus: active`** while open child lanes or inline decomposition work remains.
+4. Keep **`outputs.continuationStatus: active`** while open child lanes or inline decomposition work remains — on **terminal wake**, clear **`phaseShipComplete`** on the next re-emit when resuming decomposition (add-PR-to-closed-phase).
+
+**Terminal wake (binding):** When this lane previously reported **`continuationStatus: terminal`** or **`phaseShipComplete: true`** and notify delivery intersects **`inputs.targetPlanPath`**, treat the notification as **reactivation** — **forbidden** to tell the parent to spawn a duplicate **`phase-planner`**. Set ledger to active; offer **`resume-decomposition`** below.
 
 **Checkpoint vs external-wait (binding):** Notify delivery is **developer-input USER_CHECKPOINT** — **not** external-wait. Emit structured choice on the same turn after re-read; do **not** auto-advance to Step **5e** terminal merge or refocus parent.
 
@@ -157,6 +161,7 @@ USER_CHECKPOINT — parent plan-change notification received on phase-planner ch
 
 | Option id | Label |
 |-----------|--------|
+| `resume-decomposition` | Resume decomposition — add PR / revise phase plan (terminal wake) |
 | `acknowledge-only` | Acknowledge — continue phase delivery with updated context |
 | `re-read-revise` | Re-read / revise affected phase or PR plan sections |
 | `plan-reconcile` | Run inline **`plan-reconcile`** when authorized on this subtree |
@@ -168,6 +173,7 @@ USER_CHECKPOINT — parent plan-change notification received on phase-planner ch
 
 | Option | Act |
 |--------|-----|
+| **`resume-decomposition`** | Reactivate terminal lane: set **`continuationStatus: active`**, clear **`phaseShipComplete`** when adding PRs; route inline **`pr-breakdown`** / **`new-plan`** / **`pr-plan`** per Step **5** — **re-emit updated** terminal when standalone spawned |
 | **`acknowledge-only`** | Merge notify context into lane ledger; resume prior step — **no** terminal MCP result |
 | **`re-read-revise`** | Update phase plan §§ or child spawn **`inputs`** when paths intersect — keep phase row open |
 | **`plan-reconcile`** | Inline **`plan-reconcile`** per contract — merge ledger; **no** terminal result solely from notify |
@@ -243,7 +249,7 @@ If `parentPlanPath` / `parentPlanSlug` inputs were supplied, they must match the
 
 ## Step 2 — Load the development-process doc
 
-Read `.sedea/centers/research-and-development/docs/development-process.md` with the Read tool, **no offset, no limit**. Acknowledge in one sentence: *"Loaded development-process.md; will follow § 2 Phase plan template + § 6/§ 5 contents rule."*
+Read `.sedea/centers/research-and-development/docs/development-process.md` with the Read tool, **no offset, no limit** (slim core). Then read `.sedea/centers/research-and-development/docs/planning-mode-templates.md` in full. Acknowledge in one sentence: *"Loaded development-process core + planning-mode-templates; will follow § 2 Phase plan template + § 6/§ 5 contents rule."*
 
 This is a **standards document**, not an executable plan — its sections describe the process you will apply, not work for you to perform. Re-read on every invocation; do not rely on session memory.
 
@@ -344,7 +350,7 @@ _TBD_
 
 The `_TBD_` placeholders under §§ 5–6 mirror the convention from `master-planner` step 5c — italic and easy to grep (`rg '^_TBD_$'`). The `## 5.` heading uses the **deliberate dual-title** form per the doc's § 6 / § 5 contents rule; the actual decomposition decision (`Delivery phases` vs `PR breakdown`) and the numbered child list are made when § 5 is drafted via `delivery-phases` / `pr-breakdown`. The **`### Decomposition assessment`** block is **not** a substitute for that list — it records evidence *before* the choice.
 
-The frontmatter (`name`, `overview`, `todos`, `isProject`) is **not** touched — those were set correctly by the new-plan skill at scaffold time. If a follow-up `iterate` ever does edit a frontmatter scalar (e.g. fixing a typo in `name:`), follow the YAML scalar-quoting bullet in [`../new-plan/SKILL.md`](../new-plan/SKILL.md) § *Write the plan template* → `<slug>.plan.md` rules — most importantly, wrap any value containing `: ` (colon + space) in double quotes so Plan Board doesn't fall back to the slug for the tree label.
+The frontmatter (`name`, `overview`, `todos`, `isProject`) is **not** touched — those were set correctly by the new-plan skill at scaffold time. If a follow-up `iterate` ever does edit a frontmatter scalar (e.g. fixing a typo in `name:`), follow the YAML scalar-quoting bullet in [`../new-plan/SKILL.md`](../new-plan/SKILL.md) § *Write the plan template* → `<slug>.plan.md` rules — most importantly, wrap any value containing `: ` (colon + space) in double quotes so the operations plan tree does not fall back to the slug for the tree label.
 
 If the body is **partially drafted** (per the step 1a table), do not rewrite the whole body. Instead, fill only the still-`_TBD_` section(s) — one `StrReplace` per section, using the section header as disambiguating context (same shape as `master-planner` step 6 for §§ 1–5). Keep already-drafted content untouched. To add a missing assessment only, insert `### Decomposition assessment` and its bullets **immediately before** `## 5. Delivery phases | PR breakdown` (step 4g).
 
@@ -386,11 +392,13 @@ flowchart LR
 
 **Legend rules:**
 
-- Always include the `Legend` subgraph for **flowchart**-shaped reused diagrams so the diagram is self-documenting in the file, on the Plan Board, and in chat echo. Drop any explanatory prose that would otherwise restate what the legend conveys.
+- Always include the `Legend` subgraph for **flowchart**-shaped reused diagrams so the diagram is self-documenting in the file, in GitHub, and in chat echo. Drop any explanatory prose that would otherwise restate what the legend conveys.
 - Emit `LegendTouch` only when the phase has at least one `phaseTouch` node; emit `LegendNew` only when it has at least one `phaseNew` node. If the phase has only one of the two, drop the unused legend node and its `class … phaseNew` / `class … phaseTouch` entry from the legend.
 - **Skip** the `Legend` subgraph for non-flowchart reused diagrams (`sequenceDiagram`, `erDiagram`, `stateDiagram`, etc.) — `subgraph` is flowchart-only syntax. For those, fall back to a short prose legend below the diagram (e.g. "*Bold actors are touched in this phase.*").
 
 **Flowchart vs sequence (binding):** Do **not** copy flowchart patterns into `sequenceDiagram` blocks. HTML `<br/>` in quoted labels and `subgraph` / `classDef` / `class` styling are **flowchart-only**. Sequence diagrams use opaque participant ids (`participant plannerAgent as Planner`) and single-line `Note` statements — **forbidden** in Note bodies: `<br/>`, multi-line Note text. Full contract: [`.sedea/centers/sedea/docs/mermaid-authoring.md`](.sedea/centers/sedea/docs/mermaid-authoring.md).
+
+**High-risk abbreviations:** Never use uppercased reserved keywords as bare ids — e.g. `OPT`, `ALT`, `END`, `LOOP`, `PAR`, `AND`, `AS` (Mermaid matches case-insensitively → `opt`, `alt`, …). Prefer opaque ids + labels (`participant scopeOpts as OPT`, `participant ScopeOpts as Scope options`). Do **not** reuse a flowchart node id as a sequence `participant` id.
 
 If the parent's diagram is much bigger than this phase's scope (e.g. 15+ nodes and the phase touches 3), draft a **simplified subset** showing only the parts this phase touches plus their immediate neighbors — flag that you simplified, so the user can choose to expand.
 
@@ -404,9 +412,24 @@ A new Mermaid diagram giving a visual representation of the change introduced by
 - State diagram — when the change introduces a new lifecycle / state machine.
 - ER / schema diagram — when the change is a data-model / DB delta.
 
-Use **Mermaid** in fenced ```` ```mermaid ```` blocks so the diagram renders in Cursor and on the Plan Board. Include only what is necessary to understand the *shape* of the change; this is design granularity, not pseudocode. Follow [`.sedea/centers/sedea/docs/mermaid-authoring.md`](.sedea/centers/sedea/docs/mermaid-authoring.md) — opaque ids; when the diagram is a **flowchart**, `<br/>` in quoted labels and Legend `subgraph` are allowed; when it is a **`sequenceDiagram`**, use single-line `Note` only (no `<br/>`, no flowchart `subgraph`/`classDef`).
+Use **Mermaid** in fenced ```` ```mermaid ```` blocks so the diagram renders in Cursor and in GitHub. Include only what is necessary to understand the *shape* of the change; this is design granularity, not pseudocode. Follow [`.sedea/centers/sedea/docs/mermaid-authoring.md`](.sedea/centers/sedea/docs/mermaid-authoring.md) — opaque ids; when the diagram is a **flowchart**, `<br/>` in quoted labels and Legend `subgraph` are allowed; when it is a **`sequenceDiagram`**, use single-line `Note` only (no `<br/>`, no flowchart `subgraph`/`classDef`).
 
 The § 3 diagram complements § 2's reused-with-highlight diagram: § 2 shows *where in the parent's design* this phase lives; § 3 shows *what new shape* this phase introduces. They are usually different diagram types — § 2 inherits the parent's type (often component or flow), § 3 picks whatever conveys the per-phase change best (often sequence or state).
+
+### 4d-lint — Post-write Mermaid lint (binding)
+
+After **any** Write/StrReplace that creates or edits a fenced ```` ```mermaid ```` block in this phase plan (§2 Scope reused diagram and/or §3 Code design), and **before** Step **4f** echo or Step **5b** route handoff:
+
+1. From **`HOSTING_ROOT`**, run:
+
+   ```bash
+   node .sedea/centers/sedea/scripts/verify-mermaid-authoring.mjs "<absolute-path-to-phase-plan>"
+   ```
+
+2. **Exit 0** → continue to Step **4f** / **5b**.
+3. **Non-zero** → fix reserved bare ids / Note bodies in the plan file, re-run until exit **0**. **Forbidden:** echoing or handing off with failing Mermaid.
+
+Also run this lint after any later Mermaid-only revise (Step **5d**) before re-echo.
 
 ### 4e — § 4 Changes
 
@@ -424,7 +447,7 @@ Mandatory **in the same turn** as §§ 1–4 (or step 4g-only for legacy bodies 
 
 Include these bullets (labels may vary; content must cover each dimension):
 
-- **Kinds of change (count):** distinct *kinds* (not files, not lines) — per **`.sedea/centers/research-and-development/docs/development-process.md`** § *PR sizing — test cases and kinds of changes* (canonical); [**`20_efficient-pr-shipping.mdc`**](../../../../rules/20_efficient-pr-shipping.mdc) § *Keep PRs small and focused* summarizes for ship lanes.
+- **Kinds of change (count):** distinct *kinds* (not files, not lines) — per **`.sedea/centers/research-and-development/docs/planning-mode-templates.md`** § *PR sizing — test cases and kinds of changes* (canonical); [**`20_efficient-pr-shipping.mdc`**](../../../../rules/20_efficient-pr-shipping.mdc) § *Keep PRs small and focused* summarizes for ship lanes.
 - **PR count band:** one of `single` | `few (2–5)` | `many (6+)`.
 - **Sequencing / coupling:** one line — migrations, feature flags, cross-repo, contract order, or `low` if none.
 - **Routing recommendation:** one of `Delivery phases` (needs sub-phases first) | `PR breakdown` multi-PR | `PR breakdown` single-PR — state **why** in the same bullet or the next short bullet.
@@ -434,7 +457,7 @@ Ground the recommendation in §§ 2–4 and the parent's `Delivery phases` item 
 
 ### 4f — Echo to chat
 
-After writing the body, **echo §§ 1–4 and `### Decomposition assessment`** in the chat reply so the user can review without opening the file. The plan file is the source of truth; the chat copy is a review surface. Use the same section headers (`## 1. Background`, etc.) so the chat output aligns line-for-line with the file. Render Mermaid diagrams inline as fenced code blocks so the user sees them without opening the file.
+When §§2–3 contain Mermaid, run **4d-lint** first. After writing the body, **echo §§ 1–4 and `### Decomposition assessment`** in the chat reply so the user can review without opening the file. The plan file is the source of truth; the chat copy is a review surface. Use the same section headers (`## 1. Background`, etc.) so the chat output aligns line-for-line with the file. Render Mermaid diagrams inline as fenced code blocks so the user sees them without opening the file.
 
 If you simplified the parent's diagram in § 2c (per § 4c) or noticed parent-Changes bullets that didn't fit any phase boundary (per § 4e), surface those notes in the echo or in the handoff line — flag, don't hide.
 
@@ -617,8 +640,8 @@ When Mission Control delivers a child result from **`phase-planner`** or **`codi
 1. Match it by correlation id first, then by `outputs.targetPlanPath` / `outputs.targetPlanSlug`.
 2. Copy downstream `spawnedPlans`, `activeLanes`, `openLedgerEntries`, and `remainingTasks` into this skill's result. When inline **`new-plan`** / **`pr-plan`** reports a new child plan, append `{ planPath, planSlug }` to **`outputs.spawnedPlans`** on the next terminal re-emit so Mission Control lane documents include PR plans created inline on this lane.
 3. When result carries **`outputs.prShipComplete: true`**: record the PR index on this phase; when **every** PR plan under this phase (per **`### PR list`** on this file or inline **`pr-breakdown`** subtree) is **`ship-complete`**, set **`outputs.phaseShipComplete: true`**, **`outputs.shipPhase: done`**, **`outputs.rowStatus: closed`** for this phase plan.
-3a. When result carries **`outputs.parentPlanningFollowUpNotification: "sent"`** with non-empty **`parentPlanningFollowUps`**: append each item to the **phase plan** or bubbled **`parentPlanPath`** **`## Follow-ups`** (create section at EOF if missing); track **`pendingParentFollowUps[]`** on this lane's ledger. **Do not** expand next PR/phase index — scheduling stays on a later turn. Bubble merged fields upstream via **re-emit updated** terminal or **`## Completion (inline)`** per **`../README.md`** § *Upstream parent follow-up notification*.
-4. **Re-emit updated terminal** (standalone spawned) or **`## Completion (inline)`** (when invoker runs this skill inline) with **`phaseShipComplete`** and **`parentPlanPath`**, **`parentPlanSlug`**, **`parentIndex`** from spawn **`inputs`** — so **`delivery-phases`** / **`master-planner`** can offer **`expand-next-eligible`** per **`../README.md`** § *Upstream ship-complete notification*.
+3a. When result carries **`outputs.parentPlanningFollowUpNotification: "sent"`** with non-empty **`parentPlanningFollowUps`**: append each item to the **phase plan** or bubbled **`parentPlanPath`** **`## Follow-ups`** (create section at EOF if missing); track **`pendingParentFollowUps[]`** on this lane's ledger. **Do not** expand next PR/phase index — scheduling stays on a later turn. Bubble merged fields upstream via **re-emit updated** terminal or **`## Completion (inline)`** per `docs/spawn-ship-contracts.md` § *Upstream parent follow-up notification*.
+4. **Re-emit updated terminal** (standalone spawned) or **`## Completion (inline)`** (when invoker runs this skill inline) with **`phaseShipComplete`** and **`parentPlanPath`**, **`parentPlanSlug`**, **`parentIndex`** from spawn **`inputs`** — so **`delivery-phases`** / **`master-planner`** can offer **`expand-next-eligible`** per `docs/spawn-ship-contracts.md` § *Upstream ship-complete notification*.
 5. If downstream status is `success` and `continuationStatus: "terminal"`, this phase-planner lane may return `terminal` — unless **`phaseShipComplete`** should bubble upstream while **`continuationStatus: active`** on the parent decomposition lane.
 6. If downstream status is `success` or `partial` with active lanes or remaining tasks, return `active`.
 7. If downstream status is `failure`, `aborted`, or `abandoned`, return the same status upstream and include downstream errors.
@@ -660,7 +683,7 @@ When Step **5e** aggregates a **`coding-session`** child terminal (MCP **`missio
 
 **Forbidden:** blocking next PR index or phase expand until rules PR merges; separate **`shipRows`** sub-row; adding rules lane to **`pendingByParent`**.
 
-Normative overview: **`../README.md`** § *Parallel **`hosting-repo-rules`** fork (fire-and-forget)* and **`hosting-repo-rules/SKILL.md`** § *Spawn trigger*.
+Normative overview: `docs/spawn-ship-contracts.md` § *Parallel **`hosting-repo-rules`** fork* and **`hosting-repo-rules/SKILL.md`** § *Spawn trigger*.
 
 ## Step 5f — Implementation handoff after inline pr-plan skip (binding)
 
