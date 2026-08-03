@@ -6,6 +6,15 @@ This repository is a **Sedea Governance Center** for **Sedea-governed hosting re
 
 Govern end-to-end delivery from idea to production using a **depth-first iterative** approach: ship the **first PR** of an initiative before locking detail for later phases and PRs. Mission protocols, center rules, and skills live under `missions/`, `rules/`, and `docs/` — this README is orientation only.
 
+## GitHub repository
+
+| Remote | URL |
+|--------|-----|
+| **Upstream (sedea-centers org)** | `git@github.com:sedea-centers/software-development.git` |
+| **HTTPS** | `https://github.com/sedea-centers/software-development` |
+
+This fork keeps **`centerSlug`** / hosting checkout path **`research-and-development`** (display name **R&D**). Upstream org remote is **`sedea-centers/software-development`** (`upstream-main` mirror); local integration is **`main`** on **`kalateam/research-and-development`**.
+
 ## Missions
 
 | Command | Summary |
