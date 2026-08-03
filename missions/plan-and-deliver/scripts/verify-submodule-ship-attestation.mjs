@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Procedural verify helper — submodule source merge + promote-submodule-pin attestation.
+ * Procedural verify helper — submodule source merge + promote-center-submodule-pin attestation.
  *
  * For each in-scope center submodule under HOSTING_ROOT `.sedea/centers/`:
  * - Hosting gitlink SHA equals center remote defaultBranch tip (strict SHA — v1)

@@ -1798,7 +1798,7 @@ Under Checkpoint trust, **auto-advance** this gate on the **same turn** as **`pr
 - Source-on-main verify passes for every affected center **or** gate is N/A, and
 - Inline **`promote-center-submodule-pin`** completes successfully (or reports already aligned) for every affected center.
 
-One informational line when auto-advancing (for example: *Submodule merge gate passed — source on main; gitlink aligned via promote-submodule-pin.*).
+One informational line when auto-advancing (for example: *Submodule merge gate passed — source on main; gitlink aligned via promote-center-submodule-pin.*).
 
 **Exception — gate required:**
 
@@ -1809,7 +1809,7 @@ Call **`mission_control_present_structured_choice`** when source is not on **`de
 | Option id | Label (brief) | Agent action |
 |-----------|---------------|--------------|
 | `merge-source-first` | Merge center source PR first — retry gate | Developer merges submodule source; agent re-runs verify + promote |
-| `retry-promote-pin` | Retry inline promote-submodule-pin | Re-run skill for failed **`centerSlug`** |
+| `retry-promote-pin` | Retry inline promote-center-submodule-pin | Re-run skill for failed **`centerSlug`** |
 | `defer-ship` | Defer hosting PR | Keep `continuationStatus: active`; no **`create-pr`** |
 | `more-details` | More details for option _ | Elaborate; re-ask |
 
